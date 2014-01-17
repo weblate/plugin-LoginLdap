@@ -226,10 +226,10 @@ class LdapFunctions {
 
     private function getUserEntries($username) {
 
-        $this->log("FUNC: getUserEntries(".$username.") ldap_bind: ".$this->addSuffix($this->adminUser));
-        if (!empty($this->adminUser) && !@ldap_bind($this->ldapconn, $this->addSuffix($this->adminUser), $this->adminPass)) {
+        $this->log("FUNC: getUserEntries(".$username.") ldap_bind: ".$this->adminUser);
+        if (!empty($this->adminUser) && !@ldap_bind($this->ldapconn, $this->adminUser, $this->adminPass)) {
             $this->log("FUNC: ldap_bind() as admin FAILED!");
-            throw new Exception('cound not bind as admin');
+            throw new Exception('cound not bind as admin: '.$this->adminUser);
         }
 
         if (!empty($this->filter)) {
