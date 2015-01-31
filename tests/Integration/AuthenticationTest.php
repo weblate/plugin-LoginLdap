@@ -206,6 +206,16 @@ class AuthenticationTest extends LdapIntegrationTest
         $this->assertEquals(0, $authResult->getCode());
     }
 
+    public function test_LdapAuth_AuthenticatesSuccessfully_WhenUidContainsUmlaut()
+    {
+        $ldapAuth = LdapAuth::makeConfigured();
+        $ldapAuth->setLogin('jenngrünwald');
+        $ldapAuth->setPassword('nypl');
+        $authResult = $ldapAuth->authenticate();
+
+        $this->assertEquals(1, $authResult->getCode());
+    }
+
     private function getNonLdapUserTokenAuth()
     {
         return UsersManagerAPI::getInstance()->getTokenAuth(self::NON_LDAP_USER, md5(self::NON_LDAP_PASS));

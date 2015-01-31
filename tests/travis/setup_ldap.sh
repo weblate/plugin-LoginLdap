@@ -266,6 +266,15 @@ uid: rogue@xmansion.org
 userPassword: `slappasswd -h {md5} -s cher`
 sn: Doesnthaveone
 
+# USER ENTRY (pwd: nypl)
+dn: cn=Jennifer Grünwald,$BASE_DN
+cn: Jennifer Grünwald
+objectClass: top
+objectClass: piwikPerson
+uid: jenngrünwald
+userPassword: `slappasswd -h {md5} -s nypl`
+sn: Grünwald
+
 EOF
 
 if [ "$?" -eq "0" ]; then
