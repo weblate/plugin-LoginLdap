@@ -414,7 +414,11 @@ class LdapUsers
             $bind[] = $this->addUsernameSuffix($username);
         }
 
-        $filter = "(&" . implode('', $conditions) . ")";
+        if (count($conditions) > 1) {
+            $filter = "(&" . implode('', $conditions) . ")";
+        } else {
+            $filter = reset($conditions);
+        }
 
         return array($filter, $bind);
     }
