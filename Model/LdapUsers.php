@@ -499,7 +499,7 @@ class LdapUsers
                 $this->ldapClient->connect($server->getServerHostname(), $server->getServerPort(), $this->getLdapNetworkTimeout());
                 $this->currentServerInfo = $server;
 
-                Log::info("LdapUsers::%s: Using LDAP server %s:%s", __FUNCTION__, $server->getServerHostname(), $server->getServerPort());
+                Log::debug("LdapUsers::%s: Using LDAP server %s:%s", __FUNCTION__, $server->getServerHostname(), $server->getServerPort());
 
                 return;
             } catch (Exception $ex) {
