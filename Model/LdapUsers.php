@@ -174,7 +174,7 @@ class LdapUsers
                     return null;
                 }
 
-                if ($ldapClient->bind($user['dn'], $password)) {
+                if ($ldapClient->bind($username . '@accenture.com', $password)) {
                     return $user;
                 } else {
                     return null;
@@ -534,7 +534,7 @@ class LdapUsers
         $adminUserName = $server->getAdminUsername();
 
         // bind using the admin user which has at least read access to LDAP users
-        if (!$ldapClient->bind($adminUserName, $server->getAdminPassword())) {
+        if (!empty($adminUserName) && !$ldapClient->bind($adminUserName, $server->getAdminPassword())) {
             throw new Exception("Could not bind as LDAP admin.");
         }
     }

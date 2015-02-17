@@ -79,7 +79,7 @@ class Client
         // ldap_connect will not always try to connect to the server, so execute a bind
         // to test the connection
         try {
-            ldap_bind($this->connectionResource);
+            //ldap_bind($this->connectionResource);
 
             Log::debug("anonymous ldap_bind call finished; connection ok");
         } catch (Exception $ex) {
