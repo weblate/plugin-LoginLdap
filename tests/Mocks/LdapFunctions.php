@@ -50,3 +50,7 @@ function ldap_close($connection = null) {
 function ldap_count_entries($connection = null, $searchResultResource = null) {
     return LdapFunctions::ldap_count_entries($connection, $searchResultResource);
 }
+
+function ldap_get_option($connection = null, $option, &$value) {
+    return LdapFunctions::ldap_get_option($connection, $option, $value);
+}

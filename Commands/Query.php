@@ -60,7 +60,9 @@ class Query extends ConsoleCommand
             return $ldapClient->fetchAll($baseDn, $filter);
         });
 
-        if ($limit) {
+        if ($limit
+            && !empty($result)
+        ) {
             $result = array_slice($result, 0, $limit);
         }
 

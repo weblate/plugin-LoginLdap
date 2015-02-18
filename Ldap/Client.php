@@ -9,6 +9,8 @@
 namespace Piwik\Plugins\LoginLdap\Ldap;
 
 use Exception;
+use Piwik\ErrorHandler;
+use Piwik\Exception\ErrorException;
 use Piwik\Log;
 
 /**
@@ -68,11 +70,15 @@ class Client
 
         Log::debug("Calling ldap_connect('%s', %s)", $serverHostName, $port);
 
-        $this->connectionResource = ldap_connect($serverHostName, $port);
+        $this->connectionResource = $this->throwLdapErrors(function () use ($serverHostName, $port, $timeout) {
+            $connection = ldap_connect($serverHostName, $port);
 
-        ldap_set_option($this->connectionResource, LDAP_OPT_PROTOCOL_VERSION, 3);
-        ldap_set_option($this->connectionResource, LDAP_OPT_REFERRALS, 0);
-        ldap_set_option($this->connectionResource, LDAP_OPT_NETWORK_TIMEOUT, $timeout);
+            ldap_set_option($connection, LDAP_OPT_PROTOCOL_VERSION, 3);
+            ldap_set_option($connection, LDAP_OPT_REFERRALS, 0);
+            ldap_set_option($connection, LDAP_OPT_NETWORK_TIMEOUT, $timeout);
+
+            return $connection;
+        });
 
         Log::debug("ldap_connect result is %s", $this->connectionResource);
 
@@ -81,7 +87,7 @@ class Client
         try {
             //ldap_bind($this->connectionResource);
 
-            Log::debug("anonymous ldap_bind call finished; connection ok");
+            //Log::debug("anonymous ldap_bind call finished; connection ok");
         } catch (Exception $ex) {
             // if the error was due to a connection error, rethrow, otherwise ignore it
             $errno = ldap_errno($this->connectionResource);
@@ -129,7 +135,9 @@ class Client
 
         Log::debug("Calling ldap_bind(%s, '%s', <password[length=%s]>)", $connectionResource, $resourceDn, strlen($password));
 
-        $result = ldap_bind($connectionResource, $resourceDn, $password);
+        $result = $this->throwLdapErrors(function () use ($connectionResource, $resourceDn, $password) {
+            return ldap_bind($connectionResource, $resourceDn, $password);
+        });
 
         Log::debug("ldap_bind result is '%s'", (int)$result);
 
@@ -161,7 +169,9 @@ class Client
 
             Log::debug("Calling ldap_get_entries(%s, %s)", $connectionResource, $searchResultResource);
 
-            $ldapInfo = ldap_get_entries($connectionResource, $searchResultResource);
+            $ldapInfo = $this->throwLdapErrors(function () use ($connectionResource, $searchResultResource) {
+                return ldap_get_entries($connectionResource, $searchResultResource);
+            });
 
             Log::debug("ldap_get_entries result is %s", $ldapInfo === null ? 'null' : 'not null');
 
@@ -195,7 +205,9 @@ class Client
 
             Log::debug("Calling ldap_count_entries(%s, %s)", $connectionResource, $searchResultResource);
 
-            $result = ldap_count_entries($connectionResource, $searchResultResource);
+            $result = $this->throwLdapErrors(function () use ($connectionResource, $searchResultResource) {
+                return ldap_count_entries($connectionResource, $searchResultResource);
+            });
 
             Log::debug("ldap_count_entries returned %s", $result);
 
@@ -224,11 +236,11 @@ class Client
 
         Log::debug("Calling ldap_close(%s)", $connectionResource);
 
-        $result = ldap_close($connectionResource);
+        $this->throwLdapErrors(function () use ($connectionResource) {
+            ldap_close($connectionResource);
+        });
 
-        Log::debug("ldap_close returned %s", $result ? 'true' : 'false');
-
-        return$result;
+        Log::debug("ldap_close finished");
     }
 
     private function closeIfCurrentlyOpen()
@@ -348,7 +360,9 @@ class Client
 
         Log::debug("Calling ldap_search(%s, '%s', '%s')", $connectionResource, $baseDn, $ldapFilter);
 
-        $result = ldap_search($connectionResource, $baseDn, $ldapFilter, $attributes);
+        $result = $this->throwLdapErrors(function () use ($connectionResource, $baseDn, $ldapFilter, $attributes) {
+            return ldap_search($connectionResource, $baseDn, $ldapFilter, $attributes);
+        });
 
         Log::debug("ldap_search result is %s", $result);
 
@@ -373,5 +387,63 @@ class Client
                 return "\\" . bin2hex($matches[0]);
             }, $value);
         }
+    }
+
+    private function throwLdapErrors($callback)
+    {
+        /** @var Exception $errorException */
+        $errorException = null;
+
+        // set an error handler that will catch PHP errors for this function execution
+        $self = $this;
+        set_error_handler(function ($errno, $errstr, $errfile, $errline) use (&$errorException, $self) {
+            $extendedInfo = $self->getExtendedLdapErrorMessage();
+            if (!empty($extendedInfo)) {
+                $extendedInfo = "\nExtended error info: $extendedInfo";
+            }
+            $message = "$errstr$extendedInfo";
+
+            $errorException = new ErrorException($message, 0, $errno, $errfile, $errline);
+
+            return true;
+        });
+
+        // execute the callback and restore the old event handler before the method exits
+        try {
+            $result = $callback($this);
+        } catch (Exception $ex) {
+            restore_error_handler();
+
+            throw $ex;
+        }
+
+        restore_error_handler();
+
+        // if a PHP error was caught, throw an exception
+        if ($errorException !== null) {
+            throw $errorException;
+        }
+
+        return $result;
+    }
+
+    private function getExtendedLdapErrorMessage()
+    {
+        if (empty($this->connectionResource)) {
+            return "";
+        }
+
+        $errorNumber = false;
+        ldap_get_option($this->connectionResource, LDAP_OPT_ERROR_NUMBER, $errorNumber);
+
+        $errorMessage = false;
+        ldap_get_option($this->connectionResource, LDAP_OPT_ERROR_STRING, $errorMessage);
+
+        // active directory specific
+        $diagnosticMessage = false;
+        @ldap_get_option($this->connectionResource, 0x0032, $diagnosticMessage); // see http://php.net/manual/en/function.ldap-get-option.php
+
+        $extendedLdapErrorMessage = "Error number: $errorNumber\nError string: $errorMessage\nDiagnostic message: $diagnosticMessage";
+        return $extendedLdapErrorMessage;
     }
 }
