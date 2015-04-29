@@ -10,6 +10,7 @@ namespace Piwik\Plugins\LoginLdap\tests\Integration;
 
 use Piwik\AuthResult;
 use Piwik\Config;
+use Piwik\Container\StaticContainer;
 use Piwik\Db;
 use Piwik\Plugins\LoginLdap\Auth\WebServerAuth;
 use Piwik\Plugins\UsersManager\API as UsersManagerAPI;
@@ -34,13 +35,13 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         $_SERVER['REMOTE_USER'] = self::TEST_LOGIN;
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $ldapAuth->setPassword('slkdjfdslf');
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(1, $authResult->getCode());
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $ldapAuth->setPassword(self::TEST_PASS);
         $authResult = $ldapAuth->authenticate();
 
@@ -53,7 +54,7 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         $_SERVER['REMOTE_USER'] = 'abcdefghijk';
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(0, $authResult->getCode());
@@ -66,7 +67,7 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         $_SERVER['REMOTE_USER'] = self::TEST_LOGIN;
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(0, $authResult->getCode());
@@ -79,7 +80,7 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         $_SERVER['REMOTE_USER'] = self::TEST_LOGIN;
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(0, $authResult->getCode());
@@ -91,7 +92,7 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         unset($_SERVER['REMOTE_USER']);
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(0, $authResult->getCode());
@@ -103,7 +104,7 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         unset($_SERVER['REMOTE_USER']);
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $ldapAuth->setLogin(self::TEST_LOGIN);
         $ldapAuth->setPassword(self::TEST_PASS);
         $authResult = $ldapAuth->authenticate();
@@ -118,7 +119,7 @@ class WebServerAuthTest extends LdapIntegrationTest
 
         $_SERVER['REMOTE_USER'] = self::TEST_SUPERUSER_LOGIN;
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(AuthResult::SUCCESS_SUPERUSER_AUTH_CODE, $authResult->getCode());
@@ -128,18 +129,26 @@ class WebServerAuthTest extends LdapIntegrationTest
     {
         unset($_SERVER['REMOTE_USER']);
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $ldapAuth->setLogin(self::TEST_SUPERUSER_LOGIN);
         $ldapAuth->setPassword(self::TEST_SUPERUSER_PASS);
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(AuthResult::SUCCESS_SUPERUSER_AUTH_CODE, $authResult->getCode());
 
-        $ldapAuth = WebServerAuth::makeConfigured();
+        $ldapAuth = $this->getWebServerAuth();
         $ldapAuth->setLogin(self::TEST_SUPERUSER_LOGIN);
         $ldapAuth->setTokenAuth(UsersManagerAPI::getInstance()->getTokenAuth(self::TEST_SUPERUSER_LOGIN, md5(self::TEST_SUPERUSER_PASS)));
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(AuthResult::SUCCESS_SUPERUSER_AUTH_CODE, $authResult->getCode());
+    }
+
+    /**
+     * @return WebServerAuth
+     */
+    private function getWebServerAuth()
+    {
+        return StaticContainer::get('Piwik\Plugins\LoginLdap\Auth\WebServerAuth');
     }
 }

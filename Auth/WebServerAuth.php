@@ -16,6 +16,7 @@ use Piwik\Plugins\LoginLdap\LdapInterop\UserSynchronizer;
 use Piwik\Plugins\LoginLdap\Model\LdapUsers;
 use Piwik\Plugins\UsersManager\API as UsersManagerAPI;
 use Piwik\Plugins\UsersManager\Model as UserModel;
+use Psr\Log\LoggerInterface;
 
 /**
  * Auth implementation that assumes the web server that hosts Piwik has authenticated
@@ -49,6 +50,15 @@ class WebServerAuth extends Base
      * @var Auth
      */
     private $fallbackAuth;
+
+    public function __construct(LdapUsers $ldapUsers, UsersManagerAPI $api, UserModel $userModel, UserSynchronizer $userSynchronizer,
+                                LoggerInterface $logger, $synchronizeUsersAfterSuccessfulLogin, $fallbackAuth)
+    {
+        parent::__construct($ldapUsers, $api, $userModel, $userSynchronizer, $logger);
+
+        $this->synchronizeUsersAfterSuccessfulLogin = $synchronizeUsersAfterSuccessfulLogin;
+        $this->fallbackAuth = $fallbackAuth;
+    }
 
     /**
      * Attempts to authenticate with the information set on this instance.
@@ -94,46 +104,6 @@ class WebServerAuth extends Base
         return $this->makeAuthFailure();
     }
 
-    /**
-     * Gets the {@link $synchronizeUsersAfterSuccessfulLogin} property.
-     *
-     * @return boolean
-     */
-    public function isSynchronizeUsersAfterSuccessfulLogin()
-    {
-        return $this->synchronizeUsersAfterSuccessfulLogin;
-    }
-
-    /**
-     * Sets the {@link $synchronizeUsersAfterSuccessfulLogin} property.
-     *
-     * @param boolean $synchronizeUsersAfterSuccessfulLogin
-     */
-    public function setSynchronizeUsersAfterSuccessfulLogin($synchronizeUsersAfterSuccessfulLogin)
-    {
-        $this->synchronizeUsersAfterSuccessfulLogin = $synchronizeUsersAfterSuccessfulLogin;
-    }
-
-    /**
-     * Gets the {@link $fallbackAuth} property.
-     *
-     * @return Auth
-     */
-    public function getFallbackAuth()
-    {
-        return $this->fallbackAuth;
-    }
-
-    /**
-     * Sets the {@link $fallbackAuth} property.
-     *
-     * @param Auth $fallbackAuth
-     */
-    public function setFallbackAuth($fallbackAuth)
-    {
-        $this->fallbackAuth = $fallbackAuth;
-    }
-
     private function getAlreadyAuthenticatedLogin()
     {
         return @$_SERVER['REMOTE_USER'];
@@ -149,32 +119,5 @@ class WebServerAuth extends Base
         }
 
         $this->synchronizeLdapUser($ldapUser);
-    }
-
-    /**
-     * Returns a WebServerAuth instance configured with INI config.
-     *
-     * @return WebServerAuth
-     */
-    public static function makeConfigured()
-    {
-        $result = new WebServerAuth();
-        $result->setLdapUsers(LdapUsers::makeConfigured());
-        $result->setUsersManagerAPI(UsersManagerAPI::getInstance());
-        $result->setUsersModel(new UserModel());
-        $result->setUserSynchronizer(UserSynchronizer::makeConfigured());
-
-        $synchronizeUsersAfterSuccessfulLogin = Config::getShouldSynchronizeUsersAfterLogin();
-        $result->setSynchronizeUsersAfterSuccessfulLogin($synchronizeUsersAfterSuccessfulLogin);
-
-        if (Config::getUseLdapForAuthentication()) {
-            $fallbackAuth = LdapAuth::makeConfigured();
-        } else {
-            $fallbackAuth = SynchronizedAuth::makeConfigured();
-        }
-
-        $result->setFallbackAuth($fallbackAuth);
-
-        return $result;
     }
 }

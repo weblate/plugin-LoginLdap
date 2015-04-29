@@ -96,8 +96,14 @@ abstract class Base implements Auth
      */
     protected $logger;
 
-    public function __construct(LoggerInterface $logger = null)
+    // TODO: when all implementations done, should not use `= null`
+    public function __construct(LdapUsers $ldapUsers = null, UsersManagerAPI $api = null, UserModel $userModel = null,
+                                UserSynchronizer $userSynchronizer = null, LoggerInterface $logger = null)
     {
+        $this->ldapUsers = $ldapUsers;
+        $this->api = $api;
+        $this->usersModel = $userModel;
+        $this->userSynchronizer = $userSynchronizer;
         $this->logger = $logger ?: StaticContainer::get('Psr\Log\LoggerInterface');
     }
 
