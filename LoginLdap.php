@@ -13,11 +13,9 @@ use Piwik\Auth;
 use Piwik\Common;
 use Piwik\Container\StaticContainer;
 use Piwik\FrontController;
-use Piwik\Menu\MenuAdmin;
 use Piwik\Piwik;
 use Piwik\Plugin\Manager;
 use Piwik\Plugins\Login\Login;
-use Piwik\Plugins\LoginLdap\Auth\Base as AuthBase;
 use Piwik\Plugins\LoginLdap\LdapInterop\UserMapper;
 use Piwik\Plugins\UsersManager\API as UsersManagerAPI;
 use Piwik\Session;
@@ -149,11 +147,9 @@ class LoginLdap extends \Piwik\Plugin
      * Initializes the authentication object.
      * Listens to Request.initAuthenticationObject hook.
      */
-    function initAuthenticationObject($activateCookieAuth = false)
+    public function initAuthenticationObject($activateCookieAuth = false)
     {
-        $auth = AuthBase::factory();
-        StaticContainer::getContainer()->set('Piwik\Auth', $auth);
-
+        $auth = StaticContainer::getContainer()->get('Piwik\Auth');
         Login::initAuthenticationFromCookie($auth, $activateCookieAuth);
     }
 
