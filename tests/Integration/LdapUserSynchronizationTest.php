@@ -225,6 +225,7 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
 
     public function test_CorrectExistingUserUpdated_WhenUserEmailSuffixUsed()
     {
+        Config::getInstance()->LoginLdap['user_login_suffix'] = '@xmansion.org';
         Config::getInstance()->LoginLdap['user_email_suffix'] = '@xmansion.org';
 
         // authenticate via ldap to add the user w/ the email suffix
@@ -236,6 +237,19 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
 
         // authenticate again to make sure the correct user is updated and we didn't try to add again
         $this->authenticateViaLdap($login = 'rogue', $pass = 'cher');
+    }
+
+    public function test_UserCanLoginWithoutEmail_WhenUserLoginSuffixUsed_ButUserEmailIsNotDefaulted()
+    {
+        Config::getInstance()->LoginLdap['user_login_suffix'] = '@xmansion.org';
+
+        // authenticate via ldap to add the user w/ the email suffix
+        $this->authenticateViaLdap($login = 'rogue', $pass = 'cher');
+
+        $user = $this->getUser('rogue');
+        $this->assertNotEmpty($user);
+
+        $this->assertEquals('rogue@mydomain.com', $user['email']);
     }
 
     private function assertNoAccessInDb()
