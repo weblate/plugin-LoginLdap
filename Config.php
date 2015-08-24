@@ -26,6 +26,7 @@ class Config
         'enable_random_token_auth_generation' => 0,
         'new_user_default_sites_view_access' => '',
         'user_email_suffix' => '',
+        'user_login_suffix' => '',
         'append_user_email_suffix_to_username' => 1,
         'required_member_of' => '',
         'required_member_of_field' => 'memberOf',
@@ -154,6 +155,11 @@ class Config
     public static function getLdapUserEmailSuffix()
     {
         return self::getConfigOption('user_email_suffix');
+    }
+
+    public static function getLdapUserLoginSuffix()
+    {
+        return self::getConfigOption('user_login_suffix');
     }
 
     public static function getLdapViewAccessField()

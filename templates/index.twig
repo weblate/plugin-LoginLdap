@@ -241,6 +241,17 @@
 
         <tr>
             <td>
+                <label for="userLoginSuffix">{{ 'LoginLdap_UserLoginSuffix'|translate }}</label>
+                <br/>
+                <span class='form-description'>{{ 'LoginLdap_UserLoginSuffixDescription'|translate }}</span>
+            </td>
+            <td>
+                <input size="25" id="userLoginSuffix" value="{{ ldapConfig.user_login_suffix }}" name="user_login_suffix"/>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
                 <label for="newUserDefaultSitesViewAccess">{{ 'LoginLdap_NewUserDefaultSitesViewAccess'|translate }}</label>
                 <br/>
                 <span class="form-description">{{ 'LoginLdap_NewUserDefaultSitesViewAccessDescription'|translate }}</span>
