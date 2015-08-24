@@ -242,10 +242,10 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
     public function test_UserCanLoginWithoutEmail_WhenUserLoginSuffixUsed_ButUserEmailIsNotDefaulted()
     {
         Config::getInstance()->LoginLdap['user_login_suffix'] = '@xmansion.org';
-
+echo "EMAIL SUFFIX: ".@Config::getInstance()->LoginLdap['user_email_suffix'] ." \n";
         // authenticate via ldap to add the user w/ the email suffix
         $this->authenticateViaLdap($login = 'rogue', $pass = 'cher');
-
+echo print_r(Db::fetchAll("SELECT * FROM " . Common::prefixTable('user')), true);
         $user = $this->getUser('rogue');
         $this->assertNotEmpty($user);
 
