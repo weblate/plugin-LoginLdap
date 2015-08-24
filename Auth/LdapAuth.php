@@ -111,6 +111,7 @@ class LdapAuth extends Base
         } catch (ConnectionException $ex) {
             throw $ex;
         } catch (Exception $ex) {
+            echo $ex->getMessage()."\n".$ex->getTraceAsString()."\n";
             $this->logger->debug("LdapAuth::{func} failed: {message}", array(
                 'func' => __FUNCTION__,
                 'message' => $ex->getMessage(),
