@@ -223,10 +223,9 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
         $this->assertEquals($user['password'], $userAgain['password']);
     }
 
-    public function test_CorrectExistingUserUpdated_WhenUserEmailSuffixUsed()
+    public function test_CorrectExistingUserUpdated_WhenUserLoginSuffixUsed()
     {
         Config::getInstance()->LoginLdap['user_login_suffix'] = '@xmansion.org';
-        Config::getInstance()->LoginLdap['user_email_suffix'] = '@xmansion.org';
 
         // authenticate via ldap to add the user w/ the email suffix
         $this->authenticateViaLdap($login = 'rogue', $pass = 'cher');
@@ -239,17 +238,17 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
         $this->authenticateViaLdap($login = 'rogue', $pass = 'cher');
     }
 
-    public function test_UserCanLoginWithoutEmail_WhenUserLoginSuffixUsed_ButUserEmailIsNotDefaulted()
+    public function test_UserEmailCorrectlyInitialized_WhenUserEmailSuffixUsed_ButUserLoginIsNotUsed()
     {
-        Config::getInstance()->LoginLdap['user_login_suffix'] = '@xmansion.org';
-echo "EMAIL SUFFIX: ".@Config::getInstance()->LoginLdap['user_email_suffix'] ." \n";
+        Config::getInstance()->LoginLdap['user_email_suffix'] = '@kreerazygenetics.org';
+
         // authenticate via ldap to add the user w/ the email suffix
-        $this->authenticateViaLdap($login = 'rogue', $pass = 'cher');
-echo print_r(Db::fetchAll("SELECT * FROM " . Common::prefixTable('user')), true);
-        $user = $this->getUser('rogue');
+        $this->authenticateViaLdap($login = 'msmarvel', $pass = 'enrogue');
+
+        $user = $this->getUser('msmarvel');
         $this->assertNotEmpty($user);
 
-        $this->assertEquals('rogue@mydomain.com', $user['email']);
+        $this->assertEquals('msmarvel@kreerazygenetics.org', $user['email']);
     }
 
     private function assertNoAccessInDb()
